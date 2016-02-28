@@ -12,13 +12,7 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     model->setFilter(QDir::AllDirs);
 
     ui->dirTreeView->setModel(model);
-
-#ifdef Q_OS_WIN
-    QModelIndex idx = model->index("C:/");
-    model->setRootPath("C:/");
-#else
-    QModelIndex idx = model->index("/");
-#endif
+    QModelIndex idx = model->index(QStandardPaths::standardLocations( QStandardPaths::PicturesLocation)[0]);
 
     ui->dirTreeView->expand(idx);
     ui->dirTreeView->scrollTo(idx);
@@ -36,7 +30,7 @@ OptionsDialog::~OptionsDialog()
 
 void OptionsDialog::on_buttonBox_accepted()
 {
-    timeout = 1000*ui->spinBox->value();
+    timeout = ui->spinBox->value();
     imageCrop = static_cast<IMAGE>(ui->comboBox->currentIndex());
 
     QModelIndex index = ui->dirTreeView->currentIndex();

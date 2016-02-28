@@ -1,3 +1,6 @@
+#include <QTime>
+#include <QTimer>
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -6,18 +9,33 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    loadSettings();
-    if( photoUrlList.size() <= 0 ) {
-        // need to get photos
-        loadSettingsDialog();
-    }
+    ui->imageLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
     this->showFullScreen();
     screenHeight = this->height();
     screenWidth = this->width();
     ui->imageLabel->setGeometry(0,0,screenWidth,screenHeight);
-    QDesktopWidget *m = QApplication::desktop();
-    qDebug() << "screen count is:" << m->screenCount();
-    qDebug() << "this screen is:" << m->screenNumber(this);
+//    QDesktopWidget *m = QApplication::desktop();
+//    qDebug() << "screen count is:" << m->screenCount();
+//    qDebug() << "this screen is:" << m->screenNumber(this);
+
+    // Seed the random generator with current time
+    QTime time = QTime::currentTime();
+    qsrand((uint)time.msec());
+
+    loadSettings();
+    if( photoUrlList.size() <= 0 ) {
+        // need to get photos
+        loadSettingsDialog();
+    } else {
+        imageCount = photoUrlList.count();
+        imageItem = qrand() % imageCount;
+    }
+
+    t = new QTimer(this);
+
+    t->setInterval(imageInterval*1000);
+    connect(t,SIGNAL(timeout()),this,SLOT(showImage()));
+    t->start();
 }
 
 MainWindow::~MainWindow()
@@ -27,33 +45,19 @@ MainWindow::~MainWindow()
 
 void MainWindow::loadSettingsDialog()
 {
-    dialog = new OptionsDialog(this);
-    connect(dialog,SIGNAL(DialogOK()),
+    myOptionDialog = new OptionsDialog(this);
+    connect(myOptionDialog,SIGNAL(DialogOK()),
             this,SLOT(DialogOK()));
-    connect(dialog,SIGNAL(DialogCancel()),
+    connect(myOptionDialog,SIGNAL(DialogCancel()),
             this,SLOT(DialogCancel()));
-    dialog->show();
-//    QFileDialog dialog;
-//    dialog.setFileMode(QFileDialog::Directory);
-//    dialog.setOption(QFileDialog::DontUseNativeDialog,false);
-//    dialog.setOption(QFileDialog::DontResolveSymlinks);
-//    dialog.setNameFilterDetailsVisible(true);
-//    dialog.setViewMode(QFileDialog::Detail);
-
-//    int res = dialog.exec();
-//    QDir directory;
-
-//    if (res) {
-//        directory = dialog.selectedFiles().at(0);
-//        qDebug() << directory.absolutePath();
-//    }
+    myOptionDialog->show();
 }
 
 void MainWindow::loadSettings()
 {
     photoUrlList.clear();
     QSettings settings("GaltApps", "PhotoViewer");
-    timeout = settings.value("TimeOut", 10000).toInt();
+    imageInterval = settings.value("TimeOut", 10).toInt();
     imageCrop = static_cast<IMAGE>(settings.value("ImageFormat", Cropped).toUInt());
     int size = settings.beginReadArray("PhotoURL");
     for( int i = 0; i < size; i++ ) {
@@ -66,7 +70,7 @@ void MainWindow::loadSettings()
 void MainWindow::saveSettings()
 {
     QSettings settings("GaltApps", "PhotoViewer");
-    settings.setValue("Timeout", timeout);
+    settings.setValue("Timeout", imageInterval);
     settings.setValue("ImageFormat", static_cast<unsigned int>(imageCrop));
     settings.beginWriteArray("PhotoURL");
     for( int i = 0; i < photoUrlList.size(); i++) {
@@ -79,18 +83,18 @@ void MainWindow::saveSettings()
 
 void MainWindow::DialogOK()
 {
-    timeout = dialog->getTimeOut();
-    imageCrop = dialog->getImageCrop();
-    topDir = dialog->getTopDir();
+    imageInterval = myOptionDialog->getTimeOut();
+    imageCrop = myOptionDialog->getImageCrop();
+    topDir = myOptionDialog->getTopDir();
     QDesktopWidget *m = QApplication::desktop();
-    int whichScreen = m->screenNumber(dialog);
+    int whichScreen = m->screenNumber(myOptionDialog);
     this->windowHandle()->setScreen(qApp->screens()[whichScreen]);
-    dialog->close();
-    disconnect(dialog,SIGNAL(DialogOK()),
+    myOptionDialog->close();
+    disconnect(myOptionDialog,SIGNAL(DialogOK()),
             this,SLOT(DialogOK()));
-    disconnect(dialog,SIGNAL(DialogCancel()),
+    disconnect(myOptionDialog,SIGNAL(DialogCancel()),
             this,SLOT(DialogCancel()));
-    dialog->deleteLater();
+    myOptionDialog->deleteLater();
     qDebug() << topDir.absolutePath();
     FindImages();
 //    saveSettings();
@@ -98,12 +102,12 @@ void MainWindow::DialogOK()
 
 void MainWindow::DialogCancel()
 {
-    dialog->close();
-    disconnect(dialog,SIGNAL(DialogOK()),
+    myOptionDialog->close();
+    disconnect(myOptionDialog,SIGNAL(DialogOK()),
             this,SLOT(DialogOK()));
-    disconnect(dialog,SIGNAL(DialogCancel()),
+    disconnect(myOptionDialog,SIGNAL(DialogCancel()),
             this,SLOT(DialogCancel()));
-    dialog->deleteLater();
+    myOptionDialog->deleteLater();
 }
 
 void MainWindow::FindImages(void)
@@ -120,7 +124,15 @@ void MainWindow::FindImages(void)
         }
         it.next();
     }
-    DisplayImage(photoUrlList.at(0));
+    imageCount = photoUrlList.count();
+    imageItem = qrand() % imageCount;
+
+    DisplayImage(photoUrlList.at(imageItem % photoUrlList.count()));
+}
+
+void MainWindow::showImage()
+{
+    DisplayImage(photoUrlList.at(qrand() % imageCount));
 }
 
 void MainWindow::DisplayImage( QString path )
@@ -128,7 +140,11 @@ void MainWindow::DisplayImage( QString path )
     QImage image;
     QImageReader reader;
 
+#ifdef QT_VERSION < 5.4
+    reader.autoDetectImageFormat();
+#elif
     reader.setAutoTransform(true);
+#endif
     reader.setFileName(path);
     image = reader.read();
 
@@ -141,33 +157,64 @@ void MainWindow::DisplayImage( QString path )
 //        return false;
 //    }
 
+    qDebug() << "w:" << image.width() << "h" << image.height();
     if(image.height() > image.width()) {
+        qDebug() << "Taller";
         image.scaledToWidth(screenWidth);
     } else {
+        qDebug() << "Wider";
         image.scaledToHeight(screenHeight);
     }
+    qDebug() << "w:" << image.width() << "h" << image.height();
 
     ui->imageLabel->setPixmap(QPixmap::fromImage(image));
 }
 
+
+/*
+ *     QGraphicsOpacityEffect *opacityEffect = new QGraphicsOpacityEffect(this);
+    opacityEffect->setOpacity(1.0);
+    ui->centralwidget->setGraphicsEffect(opacityEffect);
+    QPropertyAnimation * anim = new QPropertyAnimation(this);
+    anim->setTargetObject(opacityEffect);
+    anim->setPropertyName("opacity");
+    anim->setDuration(4000);
+    anim->setStartValue(opacityEffect->opacity());
+    anim->setEndValue(0);
+    anim->setEasingCurve(QEasingCurve::OutQuad);
+    anim->start(QAbstractAnimation::KeepWhenStopped);
+    */
+
+
+
 void MainWindow::on_imageLabel_customContextMenuRequested(const QPoint &pos)
 {
-    QPoint globalPos = this->mapToGlobal(pos);
-    qDebug() << "context menu request";
+}
 
-    QMenu myMenu;
+void MainWindow::mouseDoubleClickEvent(QMouseEvent *me)
+{
+    myChooserDialog = new chooserDialog(this);
+    connect(myChooserDialog,SIGNAL(OpenOptions()),
+            this,SLOT(loadSettingsDialog()));
 
-    QAction *setupDialog;
-    QAction *exitProgram;
+    connect(myChooserDialog,SIGNAL(ExitProgram()),
+            this,SLOT(close()));
+    myChooserDialog->show();
 
-    setupDialog = new QAction("Launch Setup &Dialog", this);
-    connect(setupDialog, SIGNAL(triggered(bool)),this,SLOT(loadSettingsDialog()));
+    return QWidget::mouseDoubleClickEvent(me);
+}
 
-    exitProgram = new QAction("Close Program", this);
-    connect(exitProgram, SIGNAL(triggered(bool)), this, SLOT(close()));
-    myMenu.addAction(setupDialog);
-    myMenu.addSeparator();
-    myMenu.addAction(exitProgram);
+void MainWindow::mouseMoveEvent(QMouseEvent *me)
+{
+    return QWidget::mouseMoveEvent(me);
+}
 
-    QAction* selectedItem = myMenu.exec(globalPos);
+void MainWindow::mousePressEvent(QMouseEvent *me)
+{
+    return QWidget::mousePressEvent(me);
+}
+
+void MainWindow::mouseReleaseEvent(QMouseEvent *me)
+{
+    return QWidget::mouseReleaseEvent(me);
 }

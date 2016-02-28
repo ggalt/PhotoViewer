@@ -6,6 +6,7 @@
 #include <QFileSystemModel>
 #include <QDir>
 #include <QDebug>
+#include <QStandardPaths>
 
 enum IMAGE {
     Cropped = 0,

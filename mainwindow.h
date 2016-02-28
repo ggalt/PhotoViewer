@@ -9,8 +9,6 @@
 #include <QDir>
 #include <QDirIterator>
 #include <QDebug>
-#include <QOpenGLBuffer>
-#include <QOpenGLWidget>
 #include <QImage>
 #include <QImageReader>
 #include <QPainter>
@@ -22,6 +20,7 @@
 #include <QAction>
 
 #include "optionsdialog.h"
+#include "chooserdialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -39,6 +38,7 @@ private slots:
     void DialogOK();
     void DialogCancel();
     void loadSettingsDialog();
+    void showImage();
 
     void on_imageLabel_customContextMenuRequested(const QPoint &pos);
 
@@ -48,22 +48,30 @@ private:
     void FindImages(void);
     void DisplayImage( QString path );
 
+    void mouseDoubleClickEvent(QMouseEvent *);
+    void mouseMoveEvent(QMouseEvent *);
+    void mousePressEvent(QMouseEvent *);
+    void mouseReleaseEvent(QMouseEvent *);
+
 private:
     Ui::MainWindow *ui;
-    OptionsDialog *dialog;
-
-    QOpenGLBuffer *glBuf;
-    QOpenGLWidget *glWidget;
+    OptionsDialog *myOptionDialog;
+    chooserDialog *myChooserDialog;
 
     QString m_sSettingsFile;
     int screenHeight;
     int screenWidth;
 
     QStringList photoUrlList;
-    int timeout;
+    int imageInterval;
     IMAGE imageCrop;
     int percentage;
     QDir topDir;
+
+    QTimer *t;
+
+    int imageItem;
+    int imageCount;
 };
 
 #endif // MAINWINDOW_H
