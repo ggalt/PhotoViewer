@@ -14,10 +14,13 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    optionsdialog.cpp
+    optionsdialog.cpp \
+    chooserdialog.cpp
 
 HEADERS  += mainwindow.h \
-    optionsdialog.h
+    optionsdialog.h \
+    chooserdialog.h
 
 FORMS    += mainwindow.ui \
-    optionsdialog.ui
+    optionsdialog.ui \
+    chooserdialog.ui

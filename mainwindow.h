@@ -67,6 +67,7 @@ private:
     IMAGE imageCrop;
     int percentage;
     QDir topDir;
+    int whichScreen;
 
     QTimer *t;
 

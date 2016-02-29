@@ -10,9 +10,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->imageLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
-    this->showFullScreen();
-    screenHeight = this->height();
-    screenWidth = this->width();
+    whichScreen = 1;
+
     ui->imageLabel->setGeometry(0,0,screenWidth,screenHeight);
 //    QDesktopWidget *m = QApplication::desktop();
 //    qDebug() << "screen count is:" << m->screenCount();
@@ -31,6 +30,11 @@ MainWindow::MainWindow(QWidget *parent) :
         imageItem = qrand() % imageCount;
     }
 
+    this->windowHandle()->setScreen(qApp->screens()[whichScreen]);
+    this->showFullScreen();
+    screenHeight = this->height();
+    screenWidth = this->width();
+
     t = new QTimer(this);
 
     t->setInterval(imageInterval*1000);
@@ -40,6 +44,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    saveSettings();
     delete ui;
 }
 
@@ -59,6 +64,9 @@ void MainWindow::loadSettings()
     QSettings settings("GaltApps", "PhotoViewer");
     imageInterval = settings.value("TimeOut", 10).toInt();
     imageCrop = static_cast<IMAGE>(settings.value("ImageFormat", Cropped).toUInt());
+    whichScreen = settings.value("WhichScrren", 0).toInt();
+    qDebug() << imageInterval << imageCrop << whichScreen;
+
     int size = settings.beginReadArray("PhotoURL");
     for( int i = 0; i < size; i++ ) {
         settings.setArrayIndex(i);
@@ -72,6 +80,7 @@ void MainWindow::saveSettings()
     QSettings settings("GaltApps", "PhotoViewer");
     settings.setValue("Timeout", imageInterval);
     settings.setValue("ImageFormat", static_cast<unsigned int>(imageCrop));
+    settings.setValue("WhichScreen", whichScreen);
     settings.beginWriteArray("PhotoURL");
     for( int i = 0; i < photoUrlList.size(); i++) {
         settings.setArrayIndex(i);
@@ -87,8 +96,10 @@ void MainWindow::DialogOK()
     imageCrop = myOptionDialog->getImageCrop();
     topDir = myOptionDialog->getTopDir();
     QDesktopWidget *m = QApplication::desktop();
-    int whichScreen = m->screenNumber(myOptionDialog);
+    whichScreen = m->screenNumber(myOptionDialog);
     this->windowHandle()->setScreen(qApp->screens()[whichScreen]);
+    qDebug() << "should be on screen:" << whichScreen;
+    qDebug() << "total number of screens:" << m->screenCount();
     myOptionDialog->close();
     disconnect(myOptionDialog,SIGNAL(DialogOK()),
             this,SLOT(DialogOK()));
@@ -140,9 +151,9 @@ void MainWindow::DisplayImage( QString path )
     QImage image;
     QImageReader reader;
 
-#ifdef QT_VERSION < 5.4
+#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
     reader.autoDetectImageFormat();
-#elif
+#else
     reader.setAutoTransform(true);
 #endif
     reader.setFileName(path);
