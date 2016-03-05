@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     ui->imageLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
     whichScreen = 1;
+    isFullScreen = false;
 
     ui->imageLabel->setGeometry(0,0,screenWidth,screenHeight);
 //    QDesktopWidget *m = QApplication::desktop();
@@ -30,8 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
         imageItem = qrand() % imageCount;
     }
 
-    this->windowHandle()->setScreen(qApp->screens()[whichScreen]);
-    this->showFullScreen();
+//    this->windowHandle()->setScreen(qApp->screens()[whichScreen]);
     screenHeight = this->height();
     screenWidth = this->width();
 
@@ -40,12 +40,25 @@ MainWindow::MainWindow(QWidget *parent) :
     t->setInterval(imageInterval*1000);
     connect(t,SIGNAL(timeout()),this,SLOT(showImage()));
     t->start();
+    showImage();
 }
 
 MainWindow::~MainWindow()
 {
     saveSettings();
     delete ui;
+}
+
+void MainWindow::ToggleFullScreen(bool fullScreen)
+{
+    isFullScreen = fullScreen;
+    if(isFullScreen) {
+        this->showFullScreen();
+    } else {
+        this->showNormal();
+    }
+    screenHeight = this->height();
+    screenWidth = this->width();
 }
 
 void MainWindow::loadSettingsDialog()
@@ -108,7 +121,7 @@ void MainWindow::DialogOK()
     myOptionDialog->deleteLater();
     qDebug() << topDir.absolutePath();
     FindImages();
-//    saveSettings();
+    saveSettings();
 }
 
 void MainWindow::DialogCancel()
@@ -149,6 +162,8 @@ void MainWindow::showImage()
 void MainWindow::DisplayImage( QString path )
 {
     QImage image;
+    QImage blurImage;
+    QImage finalImage;
     QImageReader reader;
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
@@ -159,26 +174,43 @@ void MainWindow::DisplayImage( QString path )
     reader.setFileName(path);
     image = reader.read();
 
-//    if (image.isNull()) {
-//        QMessageBox::information(this, QGuiApplication::applicationDisplayName(),
-//                                 tr("Cannot load %1.").arg(QDir::toNativeSeparators(fileName)));
-//        setWindowFilePath(QString());
-//        imageLabel->setPixmap(QPixmap());
-//        imageLabel->adjustSize();
-//        return false;
-//    }
+    ui->imageLabel->setGeometry(0,0,ui->centralWidget->width(),ui->centralWidget->height());
+    ui->blurImageLabel->setGeometry(0,0,ui->centralWidget->width(),ui->centralWidget->height());
 
-    qDebug() << "w:" << image.width() << "h" << image.height();
+    QGraphicsBlurEffect *blur = new QGraphicsBlurEffect;
+    blur->setBlurRadius(300);
+
     if(image.height() > image.width()) {
         qDebug() << "Taller";
-        image.scaledToWidth(screenWidth);
+        finalImage = image.scaled(ui->imageLabel->width(),ui->imageLabel->height(),Qt::KeepAspectRatio);
+
     } else {
         qDebug() << "Wider";
-        image.scaledToHeight(screenHeight);
+        finalImage = image.scaled(ui->imageLabel->width(), ui->imageLabel->height(), Qt::KeepAspectRatio);
     }
-    qDebug() << "w:" << image.width() << "h" << image.height();
+    blurImage = applyEffectToImage(image,blur);
+    ui->imageLabel->setGeometry((ui->centralWidget->width() -  finalImage.width())/2,
+                                (ui->centralWidget->height() - finalImage.height())/2,
+                                finalImage.width(),finalImage.height());
 
-    ui->imageLabel->setPixmap(QPixmap::fromImage(image));
+    ui->blurImageLabel->setPixmap(QPixmap::fromImage(blurImage));
+    ui->imageLabel->setPixmap(QPixmap::fromImage(finalImage));
+}
+
+QImage MainWindow::applyEffectToImage(QImage src, QGraphicsEffect *effect, int extent)
+{
+    if(src.isNull()) return QImage();   //No need to do anything else!
+    if(!effect) return src;             //No need to do anything else!
+    QGraphicsScene scene;
+    QGraphicsPixmapItem item;
+    item.setPixmap(QPixmap::fromImage(src));
+    item.setGraphicsEffect(effect);
+    scene.addItem(&item);
+    QImage res(src.size()+QSize(extent*2, extent*2), QImage::Format_ARGB32);
+    res.fill(Qt::transparent);
+    QPainter ptr(&res);
+    scene.render(&ptr, QRectF(), QRectF( -extent, -extent, src.width()+extent*2, src.height()+extent*2 ) );
+    return res;
 }
 
 
@@ -204,12 +236,14 @@ void MainWindow::on_imageLabel_customContextMenuRequested(const QPoint &pos)
 
 void MainWindow::mouseDoubleClickEvent(QMouseEvent *me)
 {
-    myChooserDialog = new chooserDialog(this);
+    myChooserDialog = new chooserDialog(this, isFullScreen);
     connect(myChooserDialog,SIGNAL(OpenOptions()),
             this,SLOT(loadSettingsDialog()));
 
     connect(myChooserDialog,SIGNAL(ExitProgram()),
             this,SLOT(close()));
+    connect(myChooserDialog,SIGNAL(SwitchScreen(bool)),
+            this,SLOT(ToggleFullScreen(bool)));
     myChooserDialog->show();
 
     return QWidget::mouseDoubleClickEvent(me);

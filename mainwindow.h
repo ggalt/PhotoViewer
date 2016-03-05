@@ -2,22 +2,32 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QSettings>
-#include <QString>
-#include <QStringList>
-#include <QFileDialog>
-#include <QDir>
-#include <QDirIterator>
-#include <QDebug>
-#include <QImage>
-#include <QImageReader>
-#include <QPainter>
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QWindow>
+
+#include <QString>
+#include <QStringList>
+
+#include <QSettings>
+#include <QFileDialog>
+#include <QDir>
+#include <QDirIterator>
+
+#include <QDebug>
+
 #include <QMenu>
 #include <QPoint>
 #include <QAction>
+#include <QSize>
+
+#include <QImage>
+#include <QImageReader>
+#include <QPixmap>
+#include <QPainter>
+#include <QGraphicsBlurEffect>
+#include <QGraphicsScene>
+#include <QGraphicsPixmapItem>
 
 #include "optionsdialog.h"
 #include "chooserdialog.h"
@@ -39,6 +49,7 @@ private slots:
     void DialogCancel();
     void loadSettingsDialog();
     void showImage();
+    void ToggleFullScreen(bool fullScreen);
 
     void on_imageLabel_customContextMenuRequested(const QPoint &pos);
 
@@ -47,6 +58,7 @@ private:
     void saveSettings();
     void FindImages(void);
     void DisplayImage( QString path );
+    QImage applyEffectToImage(QImage src, QGraphicsEffect *effect, int extent = 0);
 
     void mouseDoubleClickEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
@@ -73,6 +85,8 @@ private:
 
     int imageItem;
     int imageCount;
+
+    bool isFullScreen;
 };
 
 #endif // MAINWINDOW_H
