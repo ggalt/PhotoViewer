@@ -33,6 +33,8 @@ public:
     IMAGE getImageCrop(void) {return imageCrop;}
     int getTimeOut(void) {return timeout;}
 
+    void setTimeOut(int interval);
+
 signals:
     void DialogOK();
     void DialogCancel();

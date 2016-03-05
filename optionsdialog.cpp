@@ -23,6 +23,12 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     ui->spinBox->setValue(30);
 }
 
+void OptionsDialog::setTimeOut(int interval)
+{
+    timeout = interval;
+    ui->spinBox->setValue(timeout);
+}
+
 OptionsDialog::~OptionsDialog()
 {
     delete ui;

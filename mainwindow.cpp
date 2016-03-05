@@ -68,6 +68,7 @@ void MainWindow::loadSettingsDialog()
             this,SLOT(DialogOK()));
     connect(myOptionDialog,SIGNAL(DialogCancel()),
             this,SLOT(DialogCancel()));
+    myOptionDialog->setTimeOut(imageInterval);
     myOptionDialog->show();
 }
 
@@ -75,7 +76,7 @@ void MainWindow::loadSettings()
 {
     photoUrlList.clear();
     QSettings settings("GaltApps", "PhotoViewer");
-    imageInterval = settings.value("TimeOut", 10).toInt();
+    imageInterval = settings.value("Timeout", 10).toInt();
     imageCrop = static_cast<IMAGE>(settings.value("ImageFormat", Cropped).toUInt());
     whichScreen = settings.value("WhichScrren", 0).toInt();
     qDebug() << imageInterval << imageCrop << whichScreen;
@@ -120,6 +121,8 @@ void MainWindow::DialogOK()
             this,SLOT(DialogCancel()));
     myOptionDialog->deleteLater();
     qDebug() << topDir.absolutePath();
+    if(t != NULL)
+        t->setInterval(imageInterval*1000);
     FindImages();
     saveSettings();
 }
@@ -142,7 +145,6 @@ void MainWindow::FindImages(void)
         if( it.fileInfo().isFile() ) {
             QString entry = it.fileInfo().absoluteFilePath();
             if( entry.contains(".JPG") || entry.contains(".jpg")) {
-//                qDebug() << entry;
                 photoUrlList.append(entry);
             }
         }
@@ -188,10 +190,16 @@ void MainWindow::DisplayImage( QString path )
         qDebug() << "Wider";
         finalImage = image.scaled(ui->imageLabel->width(), ui->imageLabel->height(), Qt::KeepAspectRatio);
     }
-    blurImage = applyEffectToImage(image,blur);
     ui->imageLabel->setGeometry((ui->centralWidget->width() -  finalImage.width())/2,
                                 (ui->centralWidget->height() - finalImage.height())/2,
                                 finalImage.width(),finalImage.height());
+
+    // make sure we fully cover the background with the blurred image
+    if(image.width() < ui->blurImageLabel->width()) {
+        blurImage = applyEffectToImage(image.scaled(ui->imageLabel->width(), ui->imageLabel->height(), Qt::KeepAspectRatioByExpanding),blur);
+    } else {
+        blurImage = applyEffectToImage(image,blur);
+    }
 
     ui->blurImageLabel->setPixmap(QPixmap::fromImage(blurImage));
     ui->imageLabel->setPixmap(QPixmap::fromImage(finalImage));
