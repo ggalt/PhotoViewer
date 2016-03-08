@@ -12,6 +12,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->imageLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
     whichScreen = 1;
     isFullScreen = false;
+    blurValue = 300;
+    displayState = NotShowing;
 
     ui->imageLabel->setGeometry(0,0,screenWidth,screenHeight);
 //    QDesktopWidget *m = QApplication::desktop();
@@ -69,6 +71,8 @@ void MainWindow::loadSettingsDialog()
     connect(myOptionDialog,SIGNAL(DialogCancel()),
             this,SLOT(DialogCancel()));
     myOptionDialog->setTimeOut(imageInterval);
+    myOptionDialog->setImageCount(photoUrlList.count());
+    myOptionDialog->setCurrentRandNum(imageItem);
     myOptionDialog->show();
 }
 
@@ -79,6 +83,7 @@ void MainWindow::loadSettings()
     imageInterval = settings.value("Timeout", 10).toInt();
     imageCrop = static_cast<IMAGE>(settings.value("ImageFormat", Cropped).toUInt());
     whichScreen = settings.value("WhichScrren", 0).toInt();
+    blurValue = settings.value("BlurValue", 100).toInt();
     qDebug() << imageInterval << imageCrop << whichScreen;
 
     int size = settings.beginReadArray("PhotoURL");
@@ -95,6 +100,7 @@ void MainWindow::saveSettings()
     settings.setValue("Timeout", imageInterval);
     settings.setValue("ImageFormat", static_cast<unsigned int>(imageCrop));
     settings.setValue("WhichScreen", whichScreen);
+    settings.setValue("BlurValue", blurValue);
     settings.beginWriteArray("PhotoURL");
     for( int i = 0; i < photoUrlList.size(); i++) {
         settings.setArrayIndex(i);
@@ -109,6 +115,7 @@ void MainWindow::DialogOK()
     imageInterval = myOptionDialog->getTimeOut();
     imageCrop = myOptionDialog->getImageCrop();
     topDir = myOptionDialog->getTopDir();
+    blurValue = myOptionDialog->getBlurValue();
     QDesktopWidget *m = QApplication::desktop();
     whichScreen = m->screenNumber(myOptionDialog);
     this->windowHandle()->setScreen(qApp->screens()[whichScreen]);
@@ -158,7 +165,37 @@ void MainWindow::FindImages(void)
 
 void MainWindow::showImage()
 {
-    DisplayImage(photoUrlList.at(qrand() % imageCount));
+    qDebug() << "Display State is:" << (int)displayState;
+    switch(displayState) {
+        case StartTransitionOne:
+            FadeOut(ui->imageLabel);
+        break;
+
+        case TransitionOneEnded:
+            imageItem = qrand();
+            DisplayImage(photoUrlList.at(imageItem % imageCount));
+        break;
+
+        case StartTransitionTwo:
+        break;
+
+        case TransitionTwoEnded:
+        break;
+
+        case Displaying:
+            displayState = StartTransitionOne;
+            showImage();
+        break;
+
+        case NotShowing:
+            if(!photoUrlList.isEmpty()) {
+                displayState = StartTransitionOne;
+                showImage();
+            }
+        default:
+        break;
+
+    }
 }
 
 void MainWindow::DisplayImage( QString path )
@@ -178,9 +215,11 @@ void MainWindow::DisplayImage( QString path )
 
     ui->imageLabel->setGeometry(0,0,ui->centralWidget->width(),ui->centralWidget->height());
     ui->blurImageLabel->setGeometry(0,0,ui->centralWidget->width(),ui->centralWidget->height());
+//    FadeOut(ui->imageLabel);
 
     QGraphicsBlurEffect *blur = new QGraphicsBlurEffect;
-    blur->setBlurRadius(300);
+    qDebug() << "blur value is" << blurValue;
+    blur->setBlurRadius(blurValue);
 
     if(image.height() > image.width()) {
         qDebug() << "Taller";
@@ -201,8 +240,14 @@ void MainWindow::DisplayImage( QString path )
         blurImage = applyEffectToImage(image,blur);
     }
 
+    ui->blurImageLabel->setGeometry((ui->centralWidget->width()-blurImage.width())/2,
+                                    (ui->centralWidget->height()-blurImage.height())/2,
+                                    blurImage.width(),blurImage.height());
     ui->blurImageLabel->setPixmap(QPixmap::fromImage(blurImage));
     ui->imageLabel->setPixmap(QPixmap::fromImage(finalImage));
+    FadeIn(ui->imageLabel);
+    qDebug() << path;
+    qDebug() << "Image #" << imageItem;
 }
 
 QImage MainWindow::applyEffectToImage(QImage src, QGraphicsEffect *effect, int extent)
@@ -221,20 +266,40 @@ QImage MainWindow::applyEffectToImage(QImage src, QGraphicsEffect *effect, int e
     return res;
 }
 
-
-/*
- *     QGraphicsOpacityEffect *opacityEffect = new QGraphicsOpacityEffect(this);
+void MainWindow::FadeOut(QWidget *widget)
+{
+    QGraphicsOpacityEffect *opacityEffect = new QGraphicsOpacityEffect(this);
     opacityEffect->setOpacity(1.0);
-    ui->centralwidget->setGraphicsEffect(opacityEffect);
+    widget->setGraphicsEffect(opacityEffect);
     QPropertyAnimation * anim = new QPropertyAnimation(this);
     anim->setTargetObject(opacityEffect);
     anim->setPropertyName("opacity");
-    anim->setDuration(4000);
+    anim->setDuration(1000);
     anim->setStartValue(opacityEffect->opacity());
-    anim->setEndValue(0);
+    anim->setEndValue(0.0);
     anim->setEasingCurve(QEasingCurve::OutQuad);
-    anim->start(QAbstractAnimation::KeepWhenStopped);
-    */
+//    anim->start(QAbstractAnimation::KeepWhenStopped);
+    displayState=TransitionOneEnded;
+    connect(anim,SIGNAL(finished()),this,SLOT(showImage()));
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void MainWindow::FadeIn(QWidget *widget)
+{
+    QGraphicsOpacityEffect *opacityEffect = new QGraphicsOpacityEffect(this);
+    opacityEffect->setOpacity(0.0);
+    widget->setGraphicsEffect(opacityEffect);
+    QPropertyAnimation * anim = new QPropertyAnimation(this);
+    anim->setTargetObject(opacityEffect);
+    anim->setPropertyName("opacity");
+    anim->setDuration(1000);
+    anim->setStartValue(opacityEffect->opacity());
+    anim->setEndValue(1.0);
+    anim->setEasingCurve(QEasingCurve::OutQuad);
+//    anim->start(QAbstractAnimation::KeepWhenStopped);
+    displayState = StartTransitionOne;
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
 
 
 

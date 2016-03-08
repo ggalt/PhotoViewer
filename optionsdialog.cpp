@@ -23,21 +23,28 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     ui->spinBox->setValue(30);
 }
 
+OptionsDialog::~OptionsDialog()
+{
+    delete ui;
+}
+
 void OptionsDialog::setTimeOut(int interval)
 {
     timeout = interval;
     ui->spinBox->setValue(timeout);
 }
 
-OptionsDialog::~OptionsDialog()
+void OptionsDialog::setBlurValue( int val )
 {
-    delete ui;
+    blurVal = val;
+    ui->blurSpinBox->setValue(blurVal);
 }
 
 void OptionsDialog::on_buttonBox_accepted()
 {
     timeout = ui->spinBox->value();
     imageCrop = static_cast<IMAGE>(ui->comboBox->currentIndex());
+    blurVal = ui->blurSpinBox->value();
 
     QModelIndex index = ui->dirTreeView->currentIndex();
 
@@ -51,4 +58,14 @@ void OptionsDialog::on_buttonBox_accepted()
 void OptionsDialog::on_buttonBox_rejected()
 {
     emit DialogCancel();
+}
+
+void OptionsDialog::setImageCount( int count )
+{
+    ui->pictureCount->setText(QString::number(count));
+}
+
+void OptionsDialog::setCurrentRandNum( int num )
+{
+    ui->randNum->setText(QString::number(num));
 }

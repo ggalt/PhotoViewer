@@ -28,6 +28,8 @@
 #include <QGraphicsBlurEffect>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
+#include <QGraphicsOpacityEffect>
+#include <QPropertyAnimation>
 
 #include "optionsdialog.h"
 #include "chooserdialog.h"
@@ -36,6 +38,16 @@ namespace Ui {
 class MainWindow;
 }
 
+enum DISPLAYSTATE {
+    NotShowing = 0,
+    StartTransitionOne,
+    TransitionOneEnded,
+    StartTransitionTwo,
+    TransitionTwoEnded,
+    Displaying
+};
+
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -43,6 +55,10 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+signals:
+    void TransitionOneOver(void);
+    void TransitionTwoOver(void);
 
 private slots:
     void DialogOK();
@@ -59,6 +75,8 @@ private:
     void FindImages(void);
     void DisplayImage( QString path );
     QImage applyEffectToImage(QImage src, QGraphicsEffect *effect, int extent = 0);
+    void FadeOut(QWidget *widget);
+    void FadeIn(QWidget *widget);
 
     void mouseDoubleClickEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
@@ -80,11 +98,13 @@ private:
     int percentage;
     QDir topDir;
     int whichScreen;
+    int blurValue;
 
     QTimer *t;
 
     int imageItem;
     int imageCount;
+    DISPLAYSTATE displayState;
 
     bool isFullScreen;
 };

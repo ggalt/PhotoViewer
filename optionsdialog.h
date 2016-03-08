@@ -32,8 +32,11 @@ public:
     QDir getTopDir(void) {return topDir;}
     IMAGE getImageCrop(void) {return imageCrop;}
     int getTimeOut(void) {return timeout;}
-
     void setTimeOut(int interval);
+    void setImageCount( int count );
+    void setCurrentRandNum( int num );
+    void setBlurValue( int val );
+    int getBlurValue(void) { return blurVal; }
 
 signals:
     void DialogOK();
@@ -50,6 +53,10 @@ private:
     QDir topDir;
     int timeout;
     IMAGE imageCrop;
+
+    int imageCount;
+    int currentRand;
+    int blurVal;
 };
 
 #endif // OPTIONSDIALOG_H
