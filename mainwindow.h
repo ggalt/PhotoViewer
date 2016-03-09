@@ -75,6 +75,8 @@ private:
     QImage applyEffectToImage(QImage src, QGraphicsEffect *effect, int extent = 0);
     void FadeOut(QWidget *widget);
     void FadeIn(QWidget *widget);
+    void BlurOut(QWidget *widget);
+    void BlurIn(QWidget *widget);
 
     void mouseDoubleClickEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);

@@ -167,6 +167,7 @@ void MainWindow::showImage()
     switch(displayState) {
         case StartTransitionOne:
             FadeOut(ui->imageLabel);
+//            BlurOut(ui->imageLabel);
         break;
 
         case TransitionOneEnded:
@@ -242,6 +243,7 @@ void MainWindow::DisplayImage( QString path )
                                     blurImage.width(),blurImage.height());
     ui->blurImageLabel->setPixmap(QPixmap::fromImage(blurImage));
     ui->imageLabel->setPixmap(QPixmap::fromImage(finalImage));
+//    BlurIn(ui->imageLabel);
     FadeIn(ui->imageLabel);
     qDebug() << path;
     qDebug() << "Image #" << imageItem;
@@ -274,7 +276,7 @@ void MainWindow::FadeOut(QWidget *widget)
     anim->setDuration(1000);
     anim->setStartValue(opacityEffect->opacity());
     anim->setEndValue(0.0);
-    anim->setEasingCurve(QEasingCurve::OutQuad);
+    anim->setEasingCurve(QEasingCurve::Linear);
 //    anim->start(QAbstractAnimation::KeepWhenStopped);
     displayState=TransitionOneEnded;
     connect(anim,SIGNAL(finished()),this,SLOT(showImage()));
@@ -292,7 +294,42 @@ void MainWindow::FadeIn(QWidget *widget)
     anim->setDuration(1000);
     anim->setStartValue(opacityEffect->opacity());
     anim->setEndValue(1.0);
-    anim->setEasingCurve(QEasingCurve::OutQuad);
+    anim->setEasingCurve(QEasingCurve::Linear);
+//    anim->start(QAbstractAnimation::KeepWhenStopped);
+    displayState = StartTransitionOne;
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void MainWindow::BlurOut(QWidget *widget)
+{
+    QGraphicsBlurEffect *blur = new QGraphicsBlurEffect;
+    blur->setBlurRadius(0);
+    widget->setGraphicsEffect(blur);
+    QPropertyAnimation * anim = new QPropertyAnimation(this);
+    anim->setTargetObject(blur);
+    anim->setPropertyName("blur");
+    anim->setDuration(1000);
+    anim->setStartValue(blur->blurRadius());
+    anim->setEndValue(1000);
+    anim->setEasingCurve(QEasingCurve::Linear);
+//    anim->start(QAbstractAnimation::KeepWhenStopped);
+    displayState=TransitionOneEnded;
+    connect(anim,SIGNAL(finished()),this,SLOT(showImage()));
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void MainWindow::BlurIn(QWidget *widget)
+{
+    QGraphicsBlurEffect *blur = new QGraphicsBlurEffect;
+    blur->setBlurRadius(1000);
+    widget->setGraphicsEffect(blur);
+    QPropertyAnimation * anim = new QPropertyAnimation(this);
+    anim->setTargetObject(blur);
+    anim->setPropertyName("blur");
+    anim->setDuration(1000);
+    anim->setStartValue(blur->blurRadius());
+    anim->setEndValue(0);
+    anim->setEasingCurve(QEasingCurve::Linear);
 //    anim->start(QAbstractAnimation::KeepWhenStopped);
     displayState = StartTransitionOne;
     anim->start(QAbstractAnimation::DeleteWhenStopped);
