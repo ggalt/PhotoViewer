@@ -16,9 +16,6 @@ MainWindow::MainWindow(QWidget *parent) :
     displayState = NotShowing;
 
     ui->imageLabel->setGeometry(0,0,screenWidth,screenHeight);
-//    QDesktopWidget *m = QApplication::desktop();
-//    qDebug() << "screen count is:" << m->screenCount();
-//    qDebug() << "this screen is:" << m->screenNumber(this);
 
     // Seed the random generator with current time
     QTime time = QTime::currentTime();
@@ -73,6 +70,7 @@ void MainWindow::loadSettingsDialog()
     myOptionDialog->setTimeOut(imageInterval);
     myOptionDialog->setImageCount(photoUrlList.count());
     myOptionDialog->setCurrentRandNum(imageItem);
+    myOptionDialog->setBlurValue(blurValue);
     myOptionDialog->show();
 }
 
@@ -215,7 +213,6 @@ void MainWindow::DisplayImage( QString path )
 
     ui->imageLabel->setGeometry(0,0,ui->centralWidget->width(),ui->centralWidget->height());
     ui->blurImageLabel->setGeometry(0,0,ui->centralWidget->width(),ui->centralWidget->height());
-//    FadeOut(ui->imageLabel);
 
     QGraphicsBlurEffect *blur = new QGraphicsBlurEffect;
     qDebug() << "blur value is" << blurValue;
@@ -299,12 +296,6 @@ void MainWindow::FadeIn(QWidget *widget)
 //    anim->start(QAbstractAnimation::KeepWhenStopped);
     displayState = StartTransitionOne;
     anim->start(QAbstractAnimation::DeleteWhenStopped);
-}
-
-
-
-void MainWindow::on_imageLabel_customContextMenuRequested(const QPoint &pos)
-{
 }
 
 void MainWindow::mouseDoubleClickEvent(QMouseEvent *me)

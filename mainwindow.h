@@ -67,8 +67,6 @@ private slots:
     void showImage();
     void ToggleFullScreen(bool fullScreen);
 
-    void on_imageLabel_customContextMenuRequested(const QPoint &pos);
-
 private:
     void loadSettings();
     void saveSettings();
