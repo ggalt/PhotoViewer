@@ -5,6 +5,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QWindow>
+#include <QLabel>
 
 #include <QString>
 #include <QStringList>
@@ -63,13 +64,14 @@ signals:
 private slots:
     void DialogOK();
     void DialogCancel();
-    void loadSettingsDialog();
+    void loadSettingsDialog(void);
     void showImage();
     void ToggleFullScreen(bool fullScreen);
 
 private:
-    void loadSettings();
-    void saveSettings();
+    void setupImageLabels(void);
+    void loadSettings(void);
+    void saveSettings(void);
     void FindImages(void);
     void DisplayImage( QString path );
     QImage applyEffectToImage(QImage src, QGraphicsEffect *effect, int extent = 0);
@@ -77,6 +79,7 @@ private:
     void FadeIn(QWidget *widget);
     void BlurOut(QWidget *widget);
     void BlurIn(QWidget *widget);
+    void Transition(void);
 
     void mouseDoubleClickEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
@@ -107,6 +110,11 @@ private:
     DISPLAYSTATE displayState;
 
     bool isFullScreen;
+
+    QLabel *imageLabel[2];
+    QLabel *blurLabel[2];
+
+    int counter;
 };
 
 #endif // MAINWINDOW_H
