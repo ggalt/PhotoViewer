@@ -32,6 +32,8 @@
 #include <QGraphicsOpacityEffect>
 #include <QPropertyAnimation>
 
+#include <cstdlib>      // for rand and srand
+
 #include "optionsdialog.h"
 #include "chooserdialog.h"
 
