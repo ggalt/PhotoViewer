@@ -14,80 +14,17 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QLabel" name="imageLabel_1">
+   <widget class="QWidget" name="formLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>471</width>
-      <height>321</height>
+      <x>0</x>
+      <y>0</y>
+      <width>971</width>
+      <height>761</height>
      </rect>
     </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
+    <layout class="QFormLayout" name="centralWidgetLayout"/>
    </widget>
-   <widget class="QLabel" name="blurImageLabel_1">
-    <property name="geometry">
-     <rect>
-      <x>210</x>
-      <y>440</y>
-      <width>74</width>
-      <height>19</height>
-     </rect>
-    </property>
-    <property name="autoFillBackground">
-     <bool>false</bool>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLabel" name="blurImageLabel_2">
-    <property name="geometry">
-     <rect>
-      <x>320</x>
-      <y>320</y>
-      <width>74</width>
-      <height>19</height>
-     </rect>
-    </property>
-    <property name="autoFillBackground">
-     <bool>false</bool>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLabel" name="imageLabel_2">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>20</y>
-      <width>471</width>
-      <height>321</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <zorder>blurImageLabel_1</zorder>
-   <zorder>imageLabel_1</zorder>
-   <zorder>blurImageLabel_2</zorder>
-   <zorder>imageLabel_2</zorder>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>

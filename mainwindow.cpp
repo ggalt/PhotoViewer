@@ -52,25 +52,13 @@ MainWindow::~MainWindow()
 
 void MainWindow::setupImageLabels(void)
 {
-    // set easy access to image lables
-    imageLabel[0]=ui->imageLabel_1;
-    imageLabel[1]=ui->blurImageLabel_2;
-    blurLabel[0]=ui->blurImageLabel_1;
-    blurLabel[1]=ui->blurImageLabel_2;
+    imageLabel = new myImageLabel(ui->centralWidget);
+    ui->centralWidgetLayout->addWidget(imageLabel);
+    imageLabel->setGeometry(0,0,ui->centralWidget->width(),ui->centralWidget->height());
+    imageLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
 
-    blurLabel[0]->raise();
-    blurLabel[1]->raise();
-    imageLabel[0]->raise();
-    imageLabel[1]->raise();
-
-    for(int i = 0; i < 2; i++) {
-        imageLabel[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
-        blurLabel[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
-        imageLabel[i]->setGeometry(0,0,screenWidth,screenHeight);
-        blurLabel[i]->setGeometry(0,0,screenWidth,screenHeight);
-        imageLabel[i]->setPixmap(QPixmap());
-        blurLabel[i]->setPixmap(QPixmap());
-    }
+    imageLabel->setBlurValue(blurValue);
+    imageLabel->init();
 }
 
 void MainWindow::ToggleFullScreen(bool fullScreen)
@@ -282,103 +270,6 @@ void MainWindow::DisplayImage( QString path )
     qDebug() << "Image #" << imageItem;
 }
 
-QImage MainWindow::applyEffectToImage(QImage src, QGraphicsEffect *effect, int extent)
-{
-    if(src.isNull()) return QImage();   //No need to do anything else!
-    if(!effect) return src;             //No need to do anything else!
-    QGraphicsScene scene;
-    QGraphicsPixmapItem item;
-    item.setPixmap(QPixmap::fromImage(src));
-    item.setGraphicsEffect(effect);
-    scene.addItem(&item);
-    QImage res(src.size()+QSize(extent*2, extent*2), QImage::Format_ARGB32);
-    res.fill(Qt::transparent);
-    QPainter ptr(&res);
-    scene.render(&ptr, QRectF(), QRectF( -extent, -extent, src.width()+extent*2, src.height()+extent*2 ) );
-    return res;
-}
-
-void MainWindow::Transition(void)
-{
-    printf("Transition called for counter = %d\n", counter);
-    qDebug() << "counter =" << counter;
-    FadeOut(imageLabel[counter%2]);
-    FadeOut(blurLabel[counter%2]);
-    counter++;
-    imageItem = qrand();
-    DisplayImage(photoUrlList.at(imageItem % imageCount));
-}
-
-void MainWindow::FadeOut(QWidget *widget)
-{
-    QGraphicsOpacityEffect *opacityEffect = new QGraphicsOpacityEffect(this);
-    opacityEffect->setOpacity(1.0);
-    widget->setGraphicsEffect(opacityEffect);
-    QPropertyAnimation * anim = new QPropertyAnimation(this);
-    anim->setTargetObject(opacityEffect);
-    anim->setPropertyName("opacity");
-    anim->setDuration(1000);
-    anim->setStartValue(opacityEffect->opacity());
-    anim->setEndValue(0.0);
-    anim->setEasingCurve(QEasingCurve::Linear);
-//    anim->start(QAbstractAnimation::KeepWhenStopped);
-    displayState=TransitionOneEnded;
-//    connect(anim,SIGNAL(finished()),this,SLOT(showImage()));
-    anim->start(QAbstractAnimation::DeleteWhenStopped);
-}
-
-void MainWindow::FadeIn(QWidget *widget)
-{
-    QGraphicsOpacityEffect *opacityEffect = new QGraphicsOpacityEffect(this);
-    opacityEffect->setOpacity(0.0);
-    widget->setGraphicsEffect(opacityEffect);
-    QPropertyAnimation * anim = new QPropertyAnimation(this);
-    anim->setTargetObject(opacityEffect);
-    anim->setPropertyName("opacity");
-    anim->setDuration(1000);
-    anim->setStartValue(opacityEffect->opacity());
-    anim->setEndValue(1.0);
-    anim->setEasingCurve(QEasingCurve::Linear);
-//    anim->start(QAbstractAnimation::KeepWhenStopped);
-    displayState = StartTransitionOne;
-    anim->start(QAbstractAnimation::DeleteWhenStopped);
-}
-
-void MainWindow::BlurOut(QWidget *widget)
-{
-    QGraphicsBlurEffect *blur = new QGraphicsBlurEffect;
-    blur->setBlurRadius(0);
-    widget->setGraphicsEffect(blur);
-    QPropertyAnimation * anim = new QPropertyAnimation(this);
-    anim->setTargetObject(blur);
-    anim->setPropertyName("blur");
-    anim->setDuration(1000);
-    anim->setStartValue(blur->blurRadius());
-    anim->setEndValue(1000);
-    anim->setEasingCurve(QEasingCurve::Linear);
-//    anim->start(QAbstractAnimation::KeepWhenStopped);
-    displayState=TransitionOneEnded;
-    connect(anim,SIGNAL(finished()),this,SLOT(showImage()));
-    anim->start(QAbstractAnimation::DeleteWhenStopped);
-}
-
-void MainWindow::BlurIn(QWidget *widget)
-{
-    QGraphicsBlurEffect *blur = new QGraphicsBlurEffect;
-    blur->setBlurRadius(1000);
-    widget->setGraphicsEffect(blur);
-    QPropertyAnimation * anim = new QPropertyAnimation(this);
-    anim->setTargetObject(blur);
-    anim->setPropertyName("blur");
-    anim->setDuration(1000);
-    anim->setStartValue(blur->blurRadius());
-    anim->setEndValue(0);
-    anim->setEasingCurve(QEasingCurve::Linear);
-//    anim->start(QAbstractAnimation::KeepWhenStopped);
-    displayState = StartTransitionOne;
-    anim->start(QAbstractAnimation::DeleteWhenStopped);
-}
-
 void MainWindow::mouseDoubleClickEvent(QMouseEvent *me)
 {
     myChooserDialog = new chooserDialog(this, isFullScreen);
@@ -408,3 +299,102 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *me)
 {
     return QWidget::mouseReleaseEvent(me);
 }
+
+/////////////////////////////////////////////////////////////////////
+
+//QImage MainWindow::applyEffectToImage(QImage src, QGraphicsEffect *effect, int extent)
+//{
+//    if(src.isNull()) return QImage();   //No need to do anything else!
+//    if(!effect) return src;             //No need to do anything else!
+//    QGraphicsScene scene;
+//    QGraphicsPixmapItem item;
+//    item.setPixmap(QPixmap::fromImage(src));
+//    item.setGraphicsEffect(effect);
+//    scene.addItem(&item);
+//    QImage res(src.size()+QSize(extent*2, extent*2), QImage::Format_ARGB32);
+//    res.fill(Qt::transparent);
+//    QPainter ptr(&res);
+//    scene.render(&ptr, QRectF(), QRectF( -extent, -extent, src.width()+extent*2, src.height()+extent*2 ) );
+//    return res;
+//}
+
+//void MainWindow::Transition(void)
+//{
+//    printf("Transition called for counter = %d\n", counter);
+//    qDebug() << "counter =" << counter;
+//    FadeOut(imageLabel[counter%2]);
+//    FadeOut(blurLabel[counter%2]);
+//    counter++;
+//    imageItem = qrand();
+//    DisplayImage(photoUrlList.at(imageItem % imageCount));
+//}
+
+//void MainWindow::FadeOut(QWidget *widget)
+//{
+//    QGraphicsOpacityEffect *opacityEffect = new QGraphicsOpacityEffect(this);
+//    opacityEffect->setOpacity(1.0);
+//    widget->setGraphicsEffect(opacityEffect);
+//    QPropertyAnimation * anim = new QPropertyAnimation(this);
+//    anim->setTargetObject(opacityEffect);
+//    anim->setPropertyName("opacity");
+//    anim->setDuration(1000);
+//    anim->setStartValue(opacityEffect->opacity());
+//    anim->setEndValue(0.0);
+//    anim->setEasingCurve(QEasingCurve::Linear);
+////    anim->start(QAbstractAnimation::KeepWhenStopped);
+//    displayState=TransitionOneEnded;
+////    connect(anim,SIGNAL(finished()),this,SLOT(showImage()));
+//    anim->start(QAbstractAnimation::DeleteWhenStopped);
+//}
+
+//void MainWindow::FadeIn(QWidget *widget)
+//{
+//    QGraphicsOpacityEffect *opacityEffect = new QGraphicsOpacityEffect(this);
+//    opacityEffect->setOpacity(0.0);
+//    widget->setGraphicsEffect(opacityEffect);
+//    QPropertyAnimation * anim = new QPropertyAnimation(this);
+//    anim->setTargetObject(opacityEffect);
+//    anim->setPropertyName("opacity");
+//    anim->setDuration(1000);
+//    anim->setStartValue(opacityEffect->opacity());
+//    anim->setEndValue(1.0);
+//    anim->setEasingCurve(QEasingCurve::Linear);
+////    anim->start(QAbstractAnimation::KeepWhenStopped);
+//    displayState = StartTransitionOne;
+//    anim->start(QAbstractAnimation::DeleteWhenStopped);
+//}
+
+//void MainWindow::BlurOut(QWidget *widget)
+//{
+//    QGraphicsBlurEffect *blur = new QGraphicsBlurEffect;
+//    blur->setBlurRadius(0);
+//    widget->setGraphicsEffect(blur);
+//    QPropertyAnimation * anim = new QPropertyAnimation(this);
+//    anim->setTargetObject(blur);
+//    anim->setPropertyName("blur");
+//    anim->setDuration(1000);
+//    anim->setStartValue(blur->blurRadius());
+//    anim->setEndValue(1000);
+//    anim->setEasingCurve(QEasingCurve::Linear);
+////    anim->start(QAbstractAnimation::KeepWhenStopped);
+//    displayState=TransitionOneEnded;
+//    connect(anim,SIGNAL(finished()),this,SLOT(showImage()));
+//    anim->start(QAbstractAnimation::DeleteWhenStopped);
+//}
+
+//void MainWindow::BlurIn(QWidget *widget)
+//{
+//    QGraphicsBlurEffect *blur = new QGraphicsBlurEffect;
+//    blur->setBlurRadius(1000);
+//    widget->setGraphicsEffect(blur);
+//    QPropertyAnimation * anim = new QPropertyAnimation(this);
+//    anim->setTargetObject(blur);
+//    anim->setPropertyName("blur");
+//    anim->setDuration(1000);
+//    anim->setStartValue(blur->blurRadius());
+//    anim->setEndValue(0);
+//    anim->setEasingCurve(QEasingCurve::Linear);
+////    anim->start(QAbstractAnimation::KeepWhenStopped);
+//    displayState = StartTransitionOne;
+//    anim->start(QAbstractAnimation::DeleteWhenStopped);
+//}

@@ -36,6 +36,7 @@
 
 #include "optionsdialog.h"
 #include "chooserdialog.h"
+#include "myimagelabel.h"
 
 namespace Ui {
 class MainWindow;
@@ -92,6 +93,7 @@ private:
     Ui::MainWindow *ui;
     OptionsDialog *myOptionDialog;
     chooserDialog *myChooserDialog;
+    myImageLabel *imageLabel;
 
     QString m_sSettingsFile;
     int screenHeight;
@@ -112,11 +114,6 @@ private:
     DISPLAYSTATE displayState;
 
     bool isFullScreen;
-
-    QLabel *imageLabel[2];
-    QLabel *blurLabel[2];
-
-    int counter;
 };
 
 #endif // MAINWINDOW_H
