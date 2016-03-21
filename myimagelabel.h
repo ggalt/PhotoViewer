@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QWidget>
 #include <QLabel>
+#include <QResizeEvent>
 
 #include <QPainter>
 #include <QImage>
@@ -13,6 +14,7 @@
 #include <QGraphicsBlurEffect>
 #include <QGraphicsOpacityEffect>
 #include <QRectF>
+
 
 #include <QTimeLine>
 
@@ -33,6 +35,8 @@ public:
     void init(QImage *one = NULL, QImage *two = NULL);
     void nextImage(QImage *next);
     void setBlurValue(int b) { blurValue = b; }
+    void setForegroundEffect(EFFECT f) { foregroundEffect = f; }
+    void setBackgroundEffect(EFFECT b) { backgroundEffect = b; }
 
 signals:
 
@@ -43,6 +47,7 @@ private:
     void paintCompositeImage(void);
     void createImages(void);
     QImage applyEffectToImage(QPixmap src, QGraphicsEffect *effect, int extent = 0);
+    void resizeEvent(QResizeEvent *event);
 
 private:
     QImage *originalImage[2];

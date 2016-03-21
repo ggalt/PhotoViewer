@@ -6,6 +6,7 @@
 #include <QDesktopWidget>
 #include <QWindow>
 #include <QLabel>
+#include <QResizeEvent>
 
 #include <QString>
 #include <QStringList>
@@ -77,6 +78,7 @@ private:
     void saveSettings(void);
     void FindImages(void);
     void DisplayImage( QString path );
+    QImage *GetImage(int imageNumber );
     QImage applyEffectToImage(QImage src, QGraphicsEffect *effect, int extent = 0);
     void FadeOut(QWidget *widget);
     void FadeIn(QWidget *widget);
@@ -88,6 +90,7 @@ private:
     void mouseMoveEvent(QMouseEvent *);
     void mousePressEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
+    void resizeEvent(QResizeEvent *event);
 
 private:
     Ui::MainWindow *ui;

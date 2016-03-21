@@ -53,12 +53,13 @@ MainWindow::~MainWindow()
 void MainWindow::setupImageLabels(void)
 {
     imageLabel = new myImageLabel(ui->centralWidget);
-    ui->centralWidgetLayout->addWidget(imageLabel);
     imageLabel->setGeometry(0,0,ui->centralWidget->width(),ui->centralWidget->height());
     imageLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
 
     imageLabel->setBlurValue(blurValue);
-    imageLabel->init();
+    imageLabel->setForegroundEffect(Dissolve);
+    imageLabel->setBackgroundEffect(Blur);
+    imageLabel->init(GetImage(qrand() % imageCount), GetImage(qrand() % imageCount));
 }
 
 void MainWindow::ToggleFullScreen(bool fullScreen)
@@ -171,55 +172,23 @@ void MainWindow::FindImages(void)
     imageCount = photoUrlList.count();
     imageItem = qrand() % imageCount;
 
-    DisplayImage(photoUrlList.at(imageItem % photoUrlList.count()));
+//    DisplayImage(photoUrlList.at(imageItem % photoUrlList.count()));
 }
 
 void MainWindow::showImage()
 {
     qDebug() << "Display State is:" << (int)displayState;
-    Transition();
-
-//    switch(displayState) {
-//        case StartTransitionOne:
-//            FadeOut(ui->imageLabel);
-////            BlurOut(ui->imageLabel);
-//        break;
-
-//        case TransitionOneEnded:
-//            imageItem = qrand();
-//            DisplayImage(photoUrlList.at(imageItem % imageCount));
-//        break;
-
-//        case StartTransitionTwo:
-//        break;
-
-//        case TransitionTwoEnded:
-//        break;
-
-//        case Displaying:
-//            displayState = StartTransitionOne;
-//            showImage();
-//        break;
-
-//        case NotShowing:
-//            if(!photoUrlList.isEmpty()) {
-//                displayState = StartTransitionOne;
-//                showImage();
-//            }
-//        default:
-//        break;
-
-//    }
+    imageLabel->nextImage(GetImage(qrand() % imageCount));
 }
 
-void MainWindow::DisplayImage( QString path )
+QImage *MainWindow::GetImage( int imageNumber )
 {
-    QImage image;
-    QImage blurImage;
-    QImage finalImage;
+    QImage *tempImage;
     QImageReader reader;
+    imageItem = imageNumber;
+    QString path = photoUrlList.at(imageItem);
 
-    printf("DisplayImage called for counter = %d, for image: %s\n", counter, path.toLatin1().constData());
+    printf("DisplayImage called for counter = %d, for image: %s\n", imageItem, path.toLatin1().constData());
 
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
@@ -228,46 +197,18 @@ void MainWindow::DisplayImage( QString path )
     reader.setAutoTransform(true);
 #endif
     reader.setFileName(path);
-    image = reader.read();
+    tempImage = new QImage(reader.read());
+    return tempImage;
+}
 
-    imageLabel[counter%2]->setGeometry(0,0,ui->centralWidget->width(),ui->centralWidget->height());
-    blurLabel[counter%2]->setGeometry(0,0,ui->centralWidget->width(),ui->centralWidget->height());
-    blurLabel[counter%2]->raise();
-    imageLabel[counter%2]->raise();
-
-    QGraphicsBlurEffect *blur = new QGraphicsBlurEffect;
-    qDebug() << "blur value is" << blurValue;
-    blur->setBlurRadius(blurValue);
-
-    if(image.height() > image.width()) {
-        qDebug() << "Taller";
-        finalImage = image.scaled(imageLabel[counter%2]->width(),imageLabel[counter%2]->height(),Qt::KeepAspectRatio);
-
-    } else {
-        qDebug() << "Wider";
-        finalImage = image.scaled(imageLabel[counter%2]->width(), imageLabel[counter%2]->height(), Qt::KeepAspectRatio);
-    }
-    imageLabel[counter%2]->setGeometry((ui->centralWidget->width() -  finalImage.width())/2,
-                                (ui->centralWidget->height() - finalImage.height())/2,
-                                finalImage.width(),finalImage.height());
-
-    // make sure we fully cover the background with the blurred image
-    if(image.width() < blurLabel[counter%2]->width()) {
-        blurImage = applyEffectToImage(image.scaled(imageLabel[counter%2]->width(), imageLabel[counter%2]->height(), Qt::KeepAspectRatioByExpanding),blur);
-    } else {
-        blurImage = applyEffectToImage(image,blur);
-    }
-
-    blurLabel[counter%2]->setGeometry((ui->centralWidget->width()-blurImage.width())/2,
-                                    (ui->centralWidget->height()-blurImage.height())/2,
-                                    blurImage.width(),blurImage.height());
-    blurLabel[counter%2]->setPixmap(QPixmap::fromImage(blurImage));
-    imageLabel[counter%2]->setPixmap(QPixmap::fromImage(finalImage));
-//    BlurIn(imageLabel[counter%2]);
-    FadeIn(imageLabel[counter%2]);
-    FadeIn(blurLabel[counter%2]);
-    qDebug() << path;
-    qDebug() << "Image #" << imageItem;
+void MainWindow::resizeEvent(QResizeEvent* event)
+{
+   QMainWindow::resizeEvent(event);
+   QRect r(0,0,this->width(),this->height());
+   ui->centralWidget->setGeometry(r);
+   qDebug() << "main window geometry is:" << this->geometry();
+   imageLabel->setGeometry(r);
+   qDebug() << "imagelable geometry is:" << imageLabel->geometry();
 }
 
 void MainWindow::mouseDoubleClickEvent(QMouseEvent *me)
@@ -398,3 +339,61 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *me)
 //    displayState = StartTransitionOne;
 //    anim->start(QAbstractAnimation::DeleteWhenStopped);
 //}
+//void MainWindow::DisplayImage( QString path )
+//{
+//    QImage image;
+//    QImage blurImage;
+//    QImage finalImage;
+//    QImageReader reader;
+
+//    printf("DisplayImage called for counter = %d, for image: %s\n", counter, path.toLatin1().constData());
+
+
+//#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
+//    reader.autoDetectImageFormat();
+//#else
+//    reader.setAutoTransform(true);
+//#endif
+//    reader.setFileName(path);
+//    image = reader.read();
+
+//    imageLabel[counter%2]->setGeometry(0,0,ui->centralWidget->width(),ui->centralWidget->height());
+//    blurLabel[counter%2]->setGeometry(0,0,ui->centralWidget->width(),ui->centralWidget->height());
+//    blurLabel[counter%2]->raise();
+//    imageLabel[counter%2]->raise();
+
+//    QGraphicsBlurEffect *blur = new QGraphicsBlurEffect;
+//    qDebug() << "blur value is" << blurValue;
+//    blur->setBlurRadius(blurValue);
+
+//    if(image.height() > image.width()) {
+//        qDebug() << "Taller";
+//        finalImage = image.scaled(imageLabel[counter%2]->width(),imageLabel[counter%2]->height(),Qt::KeepAspectRatio);
+
+//    } else {
+//        qDebug() << "Wider";
+//        finalImage = image.scaled(imageLabel[counter%2]->width(), imageLabel[counter%2]->height(), Qt::KeepAspectRatio);
+//    }
+//    imageLabel[counter%2]->setGeometry((ui->centralWidget->width() -  finalImage.width())/2,
+//                                (ui->centralWidget->height() - finalImage.height())/2,
+//                                finalImage.width(),finalImage.height());
+
+//    // make sure we fully cover the background with the blurred image
+//    if(image.width() < blurLabel[counter%2]->width()) {
+//        blurImage = applyEffectToImage(image.scaled(imageLabel[counter%2]->width(), imageLabel[counter%2]->height(), Qt::KeepAspectRatioByExpanding),blur);
+//    } else {
+//        blurImage = applyEffectToImage(image,blur);
+//    }
+
+//    blurLabel[counter%2]->setGeometry((ui->centralWidget->width()-blurImage.width())/2,
+//                                    (ui->centralWidget->height()-blurImage.height())/2,
+//                                    blurImage.width(),blurImage.height());
+//    blurLabel[counter%2]->setPixmap(QPixmap::fromImage(blurImage));
+//    imageLabel[counter%2]->setPixmap(QPixmap::fromImage(finalImage));
+////    BlurIn(imageLabel[counter%2]);
+//    FadeIn(imageLabel[counter%2]);
+//    FadeIn(blurLabel[counter%2]);
+//    qDebug() << path;
+//    qDebug() << "Image #" << imageItem;
+//}
+

@@ -14,20 +14,29 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QWidget" name="formLayoutWidget">
+   <widget class="myImageLabel" name="imageLabel">
     <property name="geometry">
      <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>971</width>
-      <height>761</height>
+      <x>380</x>
+      <y>260</y>
+      <width>74</width>
+      <height>19</height>
      </rect>
     </property>
-    <layout class="QFormLayout" name="centralWidgetLayout"/>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
    </widget>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>myImageLabel</class>
+   <extends>QLabel</extends>
+   <header location="global">myimagelabel.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
