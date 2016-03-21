@@ -41,7 +41,6 @@ MainWindow::MainWindow(QWidget *parent) :
     t->setInterval(imageInterval*1000);
     connect(t,SIGNAL(timeout()),this,SLOT(showImage()));
     t->start();
-    showImage();
 }
 
 MainWindow::~MainWindow()
@@ -52,7 +51,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::setupImageLabels(void)
 {
-    imageLabel = new myImageLabel(ui->centralWidget);
+    imageLabel = ui->imageLabel;
     imageLabel->setGeometry(0,0,ui->centralWidget->width(),ui->centralWidget->height());
     imageLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
 

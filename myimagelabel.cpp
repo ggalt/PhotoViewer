@@ -79,112 +79,83 @@ void myImageLabel::createImages(void)
 void myImageLabel::paintCompositeImage(void)
 {
 //    qDebug() << "paintCompositeImage";
-    QGraphicsScene scene;
-    QGraphicsPixmapItem foreGround[2];
-    QGraphicsPixmapItem backGround[2];
 
     qDebug() << "this->size():" << this->size() << "this->rect():" << this->geometry();
     QImage composite(this->size(), QImage::Format_ARGB32);
     qDebug() << "composite image rectangle is:" << composite.rect();
 
     composite.fill(Qt::transparent);
-
-//    if(backgroundEffect == Blur) {
-//        // NOTE: Blur effect only uses the first QGraphcisPixmapItem
-//        QGraphicsBlurEffect *blur = new QGraphicsBlurEffect;
-//        if( effectStep < 127 ) { // blurring out
-//            blur->setBlurRadius(effectStep * 2);
-//            backGround[OLD].setPixmap(backgroundImage[OLD]);
-//            backGround[OLD].setGraphicsEffect(blur);
-//            scene.addItem(&backGround[OLD]);
-//        } else {            // blurring back in
-//            blur->setBlurRadius((MAX_STEP - effectStep) * 2);
-//            backGround[OLD].setPixmap(backgroundImage[NEW]);
-//            backGround[OLD].setGraphicsEffect(blur);
-//            scene.addItem(&backGround[OLD]);
-//        }
-//    }
-//    else if( backgroundEffect == Dissolve ) {
-//        QGraphicsOpacityEffect *opacity[2];
-//        opacity[OLD] = new QGraphicsOpacityEffect();
-//        opacity[NEW] = new QGraphicsOpacityEffect();
-//        qreal op = (1/MAX_STEP)*(qreal)effectStep;
-//        opacity[OLD]->setOpacity((qreal)1.0 - op);
-//        opacity[NEW]->setOpacity(op);
-//        backGround[OLD].setPixmap(backgroundImage[OLD]);
-//        backGround[OLD].setGraphicsEffect(opacity[OLD]);
-//        backGround[NEW].setPixmap(backgroundImage[NEW]);
-//        backGround[NEW].setGraphicsEffect(opacity[NEW]);
-//        scene.addItem(&backGround[OLD]);
-//        scene.addItem(&backGround[NEW]);
-//    } else {
-        scene.addPixmap(backgroundImage[NEW]);
-//    }
-
     QPainter p(&composite);
-    scene.render(&p, QRectF(), QRectF(0,0,this->width(),this->height()));
-    scene.clear();
+
+
+    if(backgroundEffect == Blur) {
+        // NOTE: Blur effect only uses the first QGraphcisPixmapItem
+        QGraphicsBlurEffect *blur = new QGraphicsBlurEffect;
+        if( effectStep < 127 ) { // blurring out
+            blur->setBlurRadius(effectStep * 2);
+            p.drawImage(0,0, applyEffectToImage(backgroundImage[OLD],blur));
+        } else {            // blurring back in
+            blur->setBlurRadius((MAX_STEP - effectStep) * 2);
+            p.drawImage(0,0, applyEffectToImage(backgroundImage[NEW],blur));
+        }
+    }
+    else if( backgroundEffect == Dissolve ) {
+        QGraphicsOpacityEffect *opacity[2];
+        opacity[OLD] = new QGraphicsOpacityEffect();
+        opacity[NEW] = new QGraphicsOpacityEffect();
+        qreal op = (1/MAX_STEP)*(qreal)effectStep;
+        opacity[OLD]->setOpacity((qreal)1.0 - op);
+        opacity[NEW]->setOpacity(op);
+        p.drawImage(0,0, applyEffectToImage(backgroundImage[OLD],opacity[OLD]));
+        p.drawImage(0,0, applyEffectToImage(backgroundImage[NEW],opacity[NEW]));
+    } else {
+        p.drawPixmap(0,0,backgroundImage[NEW]);
+    }
+
 
     // we need to capture which image to use for dimensioning the rendering rectangle
     // and in the instance of the dissolve one image might be taller while the other is
     // wider, so we used these two variables to capture the info
     int imageWidth, imageHeight;
 
-//    if( foregroundEffect == Blur ) {
-//        // NOTE: Blur effect only uses the first QGraphcisPixmapItem
-//        QGraphicsBlurEffect *blur = new QGraphicsBlurEffect;
-//        if( effectStep < 127 ) { // blurring out
-//            blur->setBlurRadius(effectStep * 2);
-//            foreGround[OLD].setPixmap(foregroundImage[OLD]);
-//            foreGround[OLD].setGraphicsEffect(blur);
-//            scene.addItem(&backGround[OLD]);
-//            imageWidth = foregroundImage[OLD].width();
-//            imageHeight = foregroundImage[OLD].height();
-//        } else {            // blurring back in
-//            blur->setBlurRadius((MAX_STEP - effectStep) * 2);
-//            foreGround[OLD].setPixmap(foregroundImage[NEW]);
-//            foreGround[OLD].setGraphicsEffect(blur);
-//            scene.addItem(&backGround[OLD]);
-//            imageWidth = foregroundImage[NEW].width();
-//            imageHeight = foregroundImage[NEW].height();
-//        }
-//    }
-//    else if( foregroundEffect == Dissolve ) {
-//        QGraphicsOpacityEffect *opacity[2];
-//        opacity[OLD] = new QGraphicsOpacityEffect();
-//        opacity[NEW] = new QGraphicsOpacityEffect();
-//        qreal op = (1/MAX_STEP)*(qreal)effectStep;
-//        opacity[OLD]->setOpacity((qreal)1.0 - op);
-//        opacity[NEW]->setOpacity(op);
-//        foreGround[OLD].setPixmap(foregroundImage[OLD]);
-//        foreGround[OLD].setGraphicsEffect(opacity[OLD]);
-//        foreGround[NEW].setPixmap(foregroundImage[NEW]);
-//        foreGround[NEW].setGraphicsEffect(opacity[NEW]);
-//        scene.addItem(&foreGround[OLD]);
-//        scene.addItem(&foreGround[NEW]);
+    if( foregroundEffect == Blur ) {
+        // NOTE: Blur effect only uses the first QGraphcisPixmapItem
+        QGraphicsBlurEffect *blur = new QGraphicsBlurEffect;
+        if( effectStep < 127 ) { // blurring out
+            blur->setBlurRadius(effectStep * 2);
+            imageWidth = foregroundImage[OLD].width();
+            imageHeight = foregroundImage[OLD].height();
+            p.drawImage( (composite.width()-imageWidth)/2,
+                         (composite.height()-imageHeight)/2,
+                         applyEffectToImage(foregroundImage[OLD],blur));
+        } else {            // blurring back in
+            blur->setBlurRadius((MAX_STEP - effectStep) * 2);
+            imageWidth = foregroundImage[NEW].width();
+            imageHeight = foregroundImage[NEW].height();
+            p.drawImage( (composite.width()-imageWidth)/2,
+                         (composite.height()-imageHeight)/2,
+                         applyEffectToImage(foregroundImage[NEW],blur));
+        }
+    }
+    else if( foregroundEffect == Dissolve ) {
+        QGraphicsOpacityEffect *opacity[2];
+        opacity[OLD] = new QGraphicsOpacityEffect();
+        opacity[NEW] = new QGraphicsOpacityEffect();
+        qreal op = (1/MAX_STEP)*(qreal)effectStep;
+        opacity[OLD]->setOpacity((qreal)1.0 - op);
+        opacity[NEW]->setOpacity(op);
 
-//        // this little diversion tells us which image is the widest and
-//        // which is the tallest so that we know how big of a rectangle
-//        // we need to render the composite image
-//        if(foregroundImage[OLD].width() > foregroundImage[NEW].width())
-//            imageWidth = foregroundImage[OLD].width();
-//        else
-//            imageWidth = foregroundImage[NEW].width();
-
-//        if(foregroundImage[OLD].height() > foregroundImage[NEW].height())
-//            imageHeight = foregroundImage[OLD].height();
-//        else
-//            imageHeight = foregroundImage[NEW].height();
-//    } else {
-        scene.addPixmap(foregroundImage[NEW]);
-        imageWidth = foregroundImage[NEW].width();
-        imageHeight = foregroundImage[NEW].height();
-//    }
-
-    scene.render(&p, QRectF((this->width()-imageWidth)/2,
-                            (this->height()-imageHeight)/2,
-                            imageWidth, imageHeight),
-                 QRectF(0,0,this->width(),this->height()));
+        p.drawImage((composite.width() - foregroundImage[OLD].width())/2,
+                    (composite.height() - foregroundImage[OLD].height())/2,
+                    applyEffectToImage(foregroundImage[OLD],opacity[OLD]));
+        p.drawImage((composite.width() - foregroundImage[NEW].width())/2,
+                    (composite.height() - foregroundImage[NEW].height())/2,
+                    applyEffectToImage(foregroundImage[NEW],opacity[NEW]));
+    } else {
+        p.drawPixmap((composite.width() - foregroundImage[NEW].width())/2,
+                  (composite.height() - foregroundImage[NEW].height())/2,
+                  foregroundImage[NEW]);
+    }
 
     this->setPixmap(QPixmap::fromImage(composite));
 }
