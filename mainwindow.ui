@@ -27,6 +27,16 @@
      <string>TextLabel</string>
     </property>
    </widget>
+   <widget class="photoGLWidget" name="openGLWidget">
+    <property name="geometry">
+     <rect>
+      <x>420</x>
+      <y>750</y>
+      <width>300</width>
+      <height>200</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
@@ -35,6 +45,11 @@
    <class>myImageLabel</class>
    <extends>QLabel</extends>
    <header location="global">myimagelabel.h</header>
+  </customwidget>
+  <customwidget>
+   <class>photoGLWidget</class>
+   <extends>QOpenGLWidget</extends>
+   <header location="global">photoglwidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -16,12 +16,14 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     optionsdialog.cpp \
     chooserdialog.cpp \
-    myimagelabel.cpp
+    myimagelabel.cpp \
+    photoglwidget.cpp
 
 HEADERS  += mainwindow.h \
     optionsdialog.h \
     chooserdialog.h \
-    myimagelabel.h
+    myimagelabel.h \
+    photoglwidget.h
 
 FORMS    += mainwindow.ui \
     optionsdialog.ui \
