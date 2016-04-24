@@ -5,6 +5,7 @@
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <QPainter>
+#include <QPaintEvent>
 #include <QImage>
 #include <QImageReader>
 #include <QBrush>
@@ -26,12 +27,16 @@ protected:
     void initializeGL();
     void resizeGL(int w, int h);
     void paintGL();
+//    void paintEvent(QPaintEvent *p);
 
 private:
     int blurValue;          // base blur value of background
     QTimeLine *timeLine;
     int effectStep;
     QImage currentImage;
+
+    int winWidth;
+    int winHeight;
 };
 
 #endif // PHOTOGLWIDGET_H

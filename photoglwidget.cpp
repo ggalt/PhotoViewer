@@ -30,10 +30,14 @@ void photoGLWidget::initializeGL(void)
     // Set up the rendering context, load shaders and other resources, etc.:
     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
     f->glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    winWidth = this->geometry().width();
+    winHeight = this->geometry().height();
 }
 
 void photoGLWidget::resizeGL(int w, int h)
 {
+    winWidth = w;
+    winHeight = h;
     this->update();
 }
 
@@ -46,12 +50,12 @@ void photoGLWidget::paintGL(void)
 //    QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
 //    f->glClear(GL_COLOR_BUFFER_BIT);
 //    p.endNativePainting();
-    QRect r = this->geometry();
+    QRect r = QRect(0,0,winWidth,winHeight);
     qDebug() << r.size();
     QBrush b(Qt::black);
-//    p.fillRect(r,b);
+    p.fillRect(r,b);
 
-    p.drawImage(r,currentImage.scaledToWidth(r.width()));
+    p.drawImage(r,currentImage.scaled(this->size(),Qt::KeepAspectRatio));
     p.end();
 }
 
