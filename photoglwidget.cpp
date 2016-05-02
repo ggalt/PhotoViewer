@@ -42,6 +42,7 @@ void photoGLWidget::resizeGL(int w, int h)
     winHeight = h;
     aspectRatio = (float)winWidth / (float)winHeight;
     isWider = aspectRatio > 1 ? true : false;
+    qDebug() << "Width:" << winWidth << "Height:" << winHeight;
     this->update();
 }
 
@@ -51,22 +52,50 @@ void photoGLWidget::paintGL(void)
     QPainter p;
     p.begin(this);
     QRect r = QRect(0,0,winWidth,winHeight);
-    qDebug() << r.size();
+//    qDebug() << "R.SIZE =" << r.size();
+//    qDebug() << "R.rec =" << r;
     QBrush b(Qt::black);
     p.fillRect(r,b);
 
-    QRect scaledR;
-    if( aspectRatio > currentImage[CURRENT].GetAspectRatio() ) { // window has a wider aspect ratio than image so just worry about height
-        int imageWidth = winHeight*currentImage[CURRENT].GetAspectRatio();
-        int imageHeight = winHeight;
-        scaledR = QRect((winWidth - imageWidth) / 2,0,imageWidth,imageHeight);
-    } else {
-        int imageWidth = winWidth;
-        int imageHeight = winWidth*currentImage[CURRENT].GetAspectRatio();
-        scaledR = QRect(0, (winHeight - imageHeight)/2, imageWidth, imageHeight);
-    }
+//    qDebug() << "Image size =" << currentImage[CURRENT].size();
 
-    p.drawImage(scaledR,currentImage[CURRENT]);
+    QRect scaledR = r;
+
+//    qDebug() << "Scaled R = r:" << scaledR;
+
+    float imageAspectRatio = GetAspectRatio( currentImage[CURRENT] );
+
+    if( aspectRatio > imageAspectRatio ) { // window has a wider aspect ratio than image so just worry about height
+        qDebug() <<"Windows is wider than image";
+        int imageWidth = winHeight * imageAspectRatio;
+        int imageHeight = winHeight;
+
+//        qDebug() << "image aspect ratio =" << imageAspectRatio;
+//        qDebug() << "ImageWidth" << imageWidth;
+//        qDebug() << "winWidth" << winWidth;
+//        qDebug() << "ImageHeight" << imageHeight;
+//        qDebug() << "winHeight" << winHeight;
+
+        scaledR = QRect((winWidth - imageWidth) / 2, 0,
+                        imageWidth,imageHeight);
+    } else {
+        qDebug() <<"Windows is narrower than image";
+        int imageWidth = winWidth;
+        int imageHeight = winWidth * imageAspectRatio;
+//        qDebug() << "image aspect ratio =" << imageAspectRatio;
+//        qDebug() << "ImageWidth" << imageWidth;
+//        qDebug() << "winWidth" << winWidth;
+//        qDebug() << "ImageHeight" << imageHeight;
+//        qDebug() << "winHeight" << winHeight;
+        scaledR = QRect(0, (winHeight - imageHeight)/2,
+                        imageWidth, imageHeight);
+    }
+    p.drawImage(scaledR,currentImage[CURRENT].scaled(winWidth,winHeight,Qt::KeepAspectRatio));
     p.end();
+}
+
+float photoGLWidget::GetAspectRatio(QImage &i)
+{
+    return (float)i.width()/(float)i.width();
 }
 
