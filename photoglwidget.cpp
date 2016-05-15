@@ -99,3 +99,194 @@ float photoGLWidget::GetAspectRatio(QImage &i)
     return (float)i.width()/(float)i.width();
 }
 
+/*
+void photoGLWidget::DialogOK()
+{
+    imageInterval = myOptionDialog->getTimeOut();
+    imageCrop = myOptionDialog->getImageCrop();
+    topDir = myOptionDialog->getTopDir();
+    blurValue = myOptionDialog->getBlurValue();
+    QDesktopWidget *m = QApplication::desktop();
+    whichScreen = m->screenNumber(myOptionDialog);
+    this->windowHandle()->setScreen(qApp->screens()[whichScreen]);
+    qDebug() << "should be on screen:" << whichScreen;
+    qDebug() << "total number of screens:" << m->screenCount();
+    myOptionDialog->close();
+    disconnect(myOptionDialog,SIGNAL(DialogOK()),
+            this,SLOT(DialogOK()));
+    disconnect(myOptionDialog,SIGNAL(DialogCancel()),
+            this,SLOT(DialogCancel()));
+    myOptionDialog->deleteLater();
+    qDebug() << topDir.absolutePath();
+    if(t != NULL)
+        t->setInterval(imageInterval*1000);
+    FindImages();
+    saveSettings();
+}
+
+void photoGLWidget::DialogCancel()
+{
+    myOptionDialog->close();
+    disconnect(myOptionDialog,SIGNAL(DialogOK()),
+            this,SLOT(DialogOK()));
+    disconnect(myOptionDialog,SIGNAL(DialogCancel()),
+            this,SLOT(DialogCancel()));
+    myOptionDialog->deleteLater();
+}
+
+void photoGLWidget::loadSettingsDialog(void)
+{
+    myOptionDialog = new OptionsDialog(this);
+    connect(myOptionDialog,SIGNAL(DialogOK()),
+            this,SLOT(DialogOK()));
+    connect(myOptionDialog,SIGNAL(DialogCancel()),
+            this,SLOT(DialogCancel()));
+    myOptionDialog->setTimeOut(imageInterval);
+    myOptionDialog->setImageCount(photoUrlList.count());
+    myOptionDialog->setCurrentRandNum(imageItem);
+    myOptionDialog->setBlurValue(blurValue);
+    myOptionDialog->show();
+}
+
+void photoGLWidget::loadSettings(void)
+{
+    photoUrlList.clear();
+    QSettings settings("GaltApps", "PhotoViewer");
+    imageInterval = settings.value("Timeout", 10).toInt();
+    imageCrop = static_cast<IMAGE>(settings.value("ImageFormat", Cropped).toUInt());
+    whichScreen = settings.value("WhichScrren", 0).toInt();
+    blurValue = settings.value("BlurValue", 100).toInt();
+    qDebug() << imageInterval << imageCrop << whichScreen;
+
+    int size = settings.beginReadArray("PhotoURL");
+    for( int i = 0; i < size; i++ ) {
+        settings.setArrayIndex(i);
+        photoUrlList.append(settings.value("URL").toString());
+    }
+    settings.endArray();
+}
+
+void photoGLWidget::saveSettings(void)
+{
+    QSettings settings("GaltApps", "PhotoViewer");
+    settings.setValue("Timeout", imageInterval);
+    settings.setValue("ImageFormat", static_cast<unsigned int>(imageCrop));
+    settings.setValue("WhichScreen", whichScreen);
+    settings.setValue("BlurValue", blurValue);
+    settings.beginWriteArray("PhotoURL");
+    for( int i = 0; i < photoUrlList.size(); i++) {
+        settings.setArrayIndex(i);
+        settings.setValue("URL",photoUrlList.at(i));
+    }
+    settings.endArray();
+}
+
+void photoGLWidget::showImage()
+{
+    qDebug() << "Display State is:" << (int)displayState;
+    imageLabel->nextImage(GetImage(qrand() % imageCount));
+}
+
+void photoGLWidget::ToggleFullScreen(bool fullScreen)
+{
+}
+
+void photoGLWidget::setupImageLabels(void)
+{
+}
+
+void photoGLWidget::FindImages(void)
+{
+    photoUrlList.clear();
+    QDirIterator it(topDir, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        if( it.fileInfo().isFile() ) {
+            QString entry = it.fileInfo().absoluteFilePath();
+            if( entry.contains(".JPG") || entry.contains(".jpg")) {
+                photoUrlList.append(entry);
+            }
+        }
+        it.next();
+    }
+    imageCount = photoUrlList.count();
+    imageItem = qrand() % imageCount;
+
+//    DisplayImage(photoUrlList.at(imageItem % photoUrlList.count()));
+}
+
+void photoGLWidget::DisplayImage( QString path )
+{
+}
+
+QImage *photoGLWidget::GetImage(int imageNumber )
+{
+    QImage *tempImage;
+    QImageReader reader;
+    imageItem = imageNumber;
+    QString path = photoUrlList.at(imageItem);
+
+    printf("DisplayImage called for counter = %d, for image: %s\n", imageItem, path.toLatin1().constData());
+
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
+    reader.autoDetectImageFormat();
+#else
+    reader.setAutoTransform(true);
+#endif
+    reader.setFileName(path);
+    tempImage = new QImage(reader.read());
+    return tempImage;
+}
+
+QImage photoGLWidget::applyEffectToImage(QImage src, QGraphicsEffect *effect, int extent = 0)
+{
+}
+
+void photoGLWidget::FadeOut(QWidget *widget)
+{
+}
+
+void photoGLWidget::FadeIn(QWidget *widget)
+{
+}
+
+void photoGLWidget::BlurOut(QWidget *widget)
+{
+}
+
+void photoGLWidget::BlurIn(QWidget *widget)
+{
+}
+
+void photoGLWidget::Transition(void)
+{
+}
+
+void photoGLWidget::mouseDoubleClickEvent(QMouseEvent *)
+{
+    myChooserDialog = new chooserDialog(this, isFullScreen);
+    connect(myChooserDialog,SIGNAL(OpenOptions()),
+            this,SLOT(loadSettingsDialog()));
+
+    connect(myChooserDialog,SIGNAL(ExitProgram()),
+            this,SLOT(close()));
+    connect(myChooserDialog,SIGNAL(SwitchScreen(bool)),
+            this,SLOT(ToggleFullScreen(bool)));
+    myChooserDialog->show();
+
+    return QWidget::mouseDoubleClickEvent(me);
+}
+
+void photoGLWidget::mouseMoveEvent(QMouseEvent *)
+{
+}
+
+void photoGLWidget::mousePressEvent(QMouseEvent *)
+{
+}
+
+void photoGLWidget::mouseReleaseEvent(QMouseEvent *)
+{
+}
+
+  * /
